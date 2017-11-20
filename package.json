@@ -1,0 +1,14 @@
+{
+  "name": "bluerc",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node ./index.js"
+  },
+  "license": "ISC",
+  "dependencies": {
+    "bluetooth-serial-port": "^2.1.5",
+    "inquirer": "^4.0.0"
+  }
+}
