@@ -51,6 +51,7 @@ var sendMessage = function(message) {
   server.write(new Buffer(message), function (error, bytesWritten) {
     if(!error) {
       console.log('Brian: ' + message);
+      getMessage();
     }else{
       console.log('Error sending message');
     }
@@ -67,7 +68,6 @@ var getMessage = function() {
     }
   ]).then(function (data) {
     sendMessage(data.message);
-    getMessage();
   }).catch(function (error) {
     console.log(error);
     process.exit(0);
