@@ -2,11 +2,15 @@ var client = new (require('bluetooth-serial-port')).BluetoothSerialPort();
 var server = new(require('bluetooth-serial-port')).BluetoothSerialPortServer();
 var inquirer = require('inquirer');
 var _ = require('lodash');
+var cron = require('cron').CronJob;
 
 var connectedNodes = [];
 
 //search for nodes
-client.inquire();
+new cron('1 * * * * *', function() {
+  console.log('Searching for new clients ...');
+  client.inquire();
+}, null, true, 'America/Los_Angeles');
 
 //client connections
 client.on('found', function(address, name) {
@@ -28,8 +32,6 @@ client.on('found', function(address, name) {
         console.log('Connection failed');
       });
 
-      //close the connection
-      client.close();
     }, function() {
       console.log('Failed to connect to: ' + address);
     });
