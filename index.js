@@ -1,41 +1,47 @@
 var client = new (require('bluetooth-serial-port')).BluetoothSerialPort();
 var server = new(require('bluetooth-serial-port')).BluetoothSerialPortServer();
 var inquirer = require('inquirer');
+var _ = require('lodash');
 
+var connectedNodes = [];
+
+//search for nodes
+client.inquire();
 
 //client connections
 client.on('found', function(address, name) {
+  //check if user is already connected
+  if(!_.includes(connectedNodes, address)){
+    client.findSerialPortChannel(address, function(channel) {
+      client.connect(address, channel, function() {
+        console.log('Connected to: ' + address);
 
-  client.findSerialPortChannel(address, function(channel) {
-    client.connect(address, channel, function() {
-      console.log('Connected to: ' + address);
+        //add address to connected nodes
+        connectedNodes.push(address);
 
-      //received data
-      client.on('data', function(buffer) {
-        console.log('Jack: ' + buffer);
+        //received data
+        client.on('data', function(buffer) {
+          console.log('Jack: ' + buffer);
+        });
+
+      }, function () {
+        console.log('Connection failed');
       });
-    }, function () {
-      console.log('Connection failed');
+
+      //close the connection
+      client.close();
+    }, function() {
+      console.log('Failed to connect to: ' + address);
     });
-
-    // close the connection when you're ready
-    client.close();
-  }, function() {
-    console.log('No connections found');
-  });
+  }
 });
-
-client.inquire();
 
 
 //send client message
 var sendClient = function(message) {
   //client send data
   client.write(new Buffer(message), function (error, bytesWritten) {
-    if(!error) {
-      console.log('Brian: ' + message);
-      getMessage();
-    }else{
+    if(error) {
       console.log('Error sending message');
     }
   });
@@ -59,10 +65,7 @@ server.listen(function (clientAddress) {
 var sendServer = function(message) {
   //server send data
   server.write(new Buffer(message), function (error, bytesWritten) {
-    if(!error) {
-      console.log('Brian: ' + message);
-      getMessage();
-    }else{
+    if(error) {
       console.log('Error sending message');
     }
   });
@@ -74,11 +77,12 @@ var getMessage = function() {
     {
       type: 'input',
       name: 'message',
-      message: 'Message: '
+      message: '>'
     }
   ]).then(function (data) {
     sendServer(data.message);
     sendClient(data.message);
+    getMessage();
   }).catch(function (error) {
     console.log(error);
     process.exit(0);

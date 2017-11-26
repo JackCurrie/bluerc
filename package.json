@@ -9,6 +9,7 @@
   "license": "ISC",
   "dependencies": {
     "bluetooth-serial-port": "^2.1.5",
-    "inquirer": "^4.0.0"
+    "inquirer": "^4.0.0",
+    "lodash": "^4.17.4"
   }
 }
