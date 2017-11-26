@@ -1,38 +1,48 @@
-//var btSerial = new (require('bluetooth-serial-port')).BluetoothSerialPort();
+var client = new (require('bluetooth-serial-port')).BluetoothSerialPort();
 var server = new(require('bluetooth-serial-port')).BluetoothSerialPortServer();
 var inquirer = require('inquirer');
 
-/*
-//client
-btSerial.on('found', function(address, name) {
 
-  btSerial.findSerialPortChannel(address, function(channel) {
-    btSerial.connect(address, channel, function() {
-      console.log('connected');
+//client connections
+client.on('found', function(address, name) {
 
-      btSerial.write(new Buffer('Brian client', 'utf-8'), function(err, bytesWritten) {
-        if (err) console.log(err);
-      });
+  client.findSerialPortChannel(address, function(channel) {
+    client.connect(address, channel, function() {
+      console.log('Connected to: ' + address);
 
-      btSerial.on('data', function(buffer) {
-        console.log(buffer.toString('utf-8'));
+      //received data
+      client.on('data', function(buffer) {
+        console.log('Jack: ' + buffer);
       });
     }, function () {
-      console.log('cannot connect');
+      console.log('Connection failed');
     });
 
     // close the connection when you're ready
-    btSerial.close();
+    client.close();
   }, function() {
-    console.log('found nothing');
+    console.log('No connections found');
   });
 });
 
-btSerial.inquire();
-*/
+client.inquire();
 
 
-//server
+//send client message
+var sendClient = function(message) {
+  //client send data
+  client.write(new Buffer(message), function (error, bytesWritten) {
+    if(!error) {
+      console.log('Brian: ' + message);
+      getMessage();
+    }else{
+      console.log('Error sending message');
+    }
+  });
+};
+
+
+//server connections
 server.listen(function (clientAddress) {
   console.log('Connected to: ' + clientAddress);
 
@@ -40,13 +50,13 @@ server.listen(function (clientAddress) {
   server.on('data', function(buffer) {
     console.log('Jack: ' + buffer);
   });
+
 }, function(error){
-  console.error("Something wrong happened!:" + error);
+  console.error("Connection error: " + error);
 });
 
-
-//send message
-var sendMessage = function(message) {
+//send server message
+var sendServer = function(message) {
   //server send data
   server.write(new Buffer(message), function (error, bytesWritten) {
     if(!error) {
@@ -67,7 +77,8 @@ var getMessage = function() {
       message: 'Message: '
     }
   ]).then(function (data) {
-    sendMessage(data.message);
+    sendServer(data.message);
+    sendClient(data.message);
   }).catch(function (error) {
     console.log(error);
     process.exit(0);
