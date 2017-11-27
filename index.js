@@ -16,7 +16,7 @@ new cron('1 * * * * *', function() {
 console.log('Searching for new clients ...');
 client.inquire();
 
-//client connections
+// client connections
 client.on('found', function(address, name) {
   //check if user is already connected
   if(!_.includes(connections, address)){
@@ -47,7 +47,9 @@ client.on('found', function(address, name) {
 });
 
 
-//send client message
+// SendServer and SendClient methods.
+//
+//
 var sendClient = function(message) {
   //client send data
   client.write(new Buffer(message), function (error, bytesWritten) {
@@ -57,8 +59,18 @@ var sendClient = function(message) {
   });
 };
 
+var sendServer = function(message) {
+  //server send data
+  server.write(new Buffer(message), function (error, bytesWritten) {
+    if(error) {
+      console.log('Error sending message');
+    }
+  });
+};
 
-//server connections
+
+// Server listen handler
+//
 server.listen(function (address) {
   console.log('Connected to: ' + address);
 
@@ -76,17 +88,9 @@ server.listen(function (address) {
   console.error("Connection error: " + error);
 });
 
-//send server message
-var sendServer = function(message) {
-  //server send data
-  server.write(new Buffer(message), function (error, bytesWritten) {
-    if(error) {
-      console.log('Error sending message');
-    }
-  });
-};
 
-//get prompt message from user
+//
+//
 var getMessage = function() {
   inquirer.prompt([
     {
