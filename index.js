@@ -40,8 +40,6 @@ client.on('found', function(address, name) {
         console.log('Connection failed');
       });
 
-      //close the connection
-      // client.close();
     }, function() {
       console.log('Failed to connect to: ' + address);
     });
