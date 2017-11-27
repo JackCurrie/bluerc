@@ -1,5 +1,5 @@
 var client = new (require('bluetooth-serial-port')).BluetoothSerialPort();
-// var server = new(require('bluetooth-serial-port')).BluetoothSerialPortServer();
+var server = new(require('bluetooth-serial-port')).BluetoothSerialPortServer();
 var inquirer = require('inquirer');
 var _ = require('lodash');
 var cron = require('cron').CronJob;
@@ -54,7 +54,7 @@ var sendClient = function(message) {
 
 
 //server connections
-/*server.listen(function (clientAddress) {
+server.listen(function (clientAddress) {
   console.log('Connected to: ' + clientAddress);
 
   //received data
@@ -74,7 +74,7 @@ var sendServer = function(message) {
       console.log('Error sending message');
     }
   });
-};*/
+};
 
 //get prompt message from user
 var getMessage = function() {
@@ -85,7 +85,7 @@ var getMessage = function() {
       message: '>'
     }
   ]).then(function (data) {
-    // sendServer(data.message);
+    sendServer(data.message);
     sendClient(data.message);
     getMessage();
   }).catch(function (error) {
