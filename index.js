@@ -1,10 +1,8 @@
 var client = new (require('bluetooth-serial-port')).BluetoothSerialPort();
-var server = new(require('bluetooth-serial-port')).BluetoothSerialPortServer();
+// var server = new(require('bluetooth-serial-port')).BluetoothSerialPortServer();
 var inquirer = require('inquirer');
 var _ = require('lodash');
 var cron = require('cron').CronJob;
-
-var connectedNodes = [];
 
 //search for nodes
 new cron('1 * * * * *', function() {
@@ -12,30 +10,35 @@ new cron('1 * * * * *', function() {
   client.inquire();
 }, null, true, 'America/Los_Angeles');
 
+// Init connect
+console.log('Searching for new clients ...');
+client.inquire();
+
 //client connections
 client.on('found', function(address, name) {
   //check if user is already connected
-  if(!_.includes(connectedNodes, address)){
-    client.findSerialPortChannel(address, function(channel) {
-      client.connect(address, channel, function() {
-        console.log('Connected to: ' + address);
+  client.listPairedDevices(function(list) {
+    if(!_.includes(_.map(list, 'address'), address)){
+      client.findSerialPortChannel(address, function(channel) {
+        client.connect(address, channel, function() {
+          console.log('Connected to: ' + address);
 
-        //add address to connected nodes
-        connectedNodes.push(address);
+          //received data
+          client.on('data', function(buffer) {
+            console.log('Jack: ' + buffer);
+          });
 
-        //received data
-        client.on('data', function(buffer) {
-          console.log('Jack: ' + buffer);
+        }, function () {
+          console.log('Connection failed');
         });
 
-      }, function () {
-        console.log('Connection failed');
+        //close the connection
+        // client.close();
+      }, function() {
+        console.log('Failed to connect to: ' + address);
       });
-
-    }, function() {
-      console.log('Failed to connect to: ' + address);
-    });
-  }
+    }
+  });
 });
 
 
@@ -51,7 +54,7 @@ var sendClient = function(message) {
 
 
 //server connections
-server.listen(function (clientAddress) {
+/*server.listen(function (clientAddress) {
   console.log('Connected to: ' + clientAddress);
 
   //received data
@@ -71,7 +74,7 @@ var sendServer = function(message) {
       console.log('Error sending message');
     }
   });
-};
+};*/
 
 //get prompt message from user
 var getMessage = function() {
@@ -82,7 +85,7 @@ var getMessage = function() {
       message: '>'
     }
   ]).then(function (data) {
-    sendServer(data.message);
+    // sendServer(data.message);
     sendClient(data.message);
     getMessage();
   }).catch(function (error) {
