@@ -4,6 +4,8 @@ var inquirer = require('inquirer');
 var _ = require('lodash');
 var cron = require('cron').CronJob;
 
+var connections = [];
+
 //search for nodes
 new cron('1 * * * * *', function() {
   console.log('Searching for new clients ...');
@@ -17,28 +19,33 @@ client.inquire();
 //client connections
 client.on('found', function(address, name) {
   //check if user is already connected
-  client.listPairedDevices(function(list) {
-    if(!_.includes(_.map(list, 'address'), address)){
-      client.findSerialPortChannel(address, function(channel) {
-        client.connect(address, channel, function() {
-          console.log('Connected to: ' + address);
+  if(!_.includes(connections, address)){
+    client.findSerialPortChannel(address, function(channel) {
+      client.connect(address, channel, function() {
+        console.log('Connected to: ' + address);
 
-          //received data
-          client.on('data', function(buffer) {
-            console.log('Jack: ' + buffer);
-          });
+        connections.push(address);
 
-        }, function () {
-          console.log('Connection failed');
+        //received data
+        client.on('data', function(buffer) {
+          console.log(address + ': ' + buffer);
         });
 
-        //close the connection
-        // client.close();
-      }, function() {
-        console.log('Failed to connect to: ' + address);
+        client.on('closed', function() {
+          console.log(address + ': closed connection');
+          _.pullAt(connections, connections.indexOf(address));
+        });
+
+      }, function () {
+        console.log('Connection failed');
       });
-    }
-  });
+
+      //close the connection
+      // client.close();
+    }, function() {
+      console.log('Failed to connect to: ' + address);
+    });
+  }
 });
 
 
@@ -54,12 +61,17 @@ var sendClient = function(message) {
 
 
 //server connections
-server.listen(function (clientAddress) {
-  console.log('Connected to: ' + clientAddress);
+server.listen(function (address) {
+  console.log('Connected to: ' + address);
 
   //received data
   server.on('data', function(buffer) {
-    console.log('Jack: ' + buffer);
+    console.log(address + ': ' + buffer);
+  });
+
+  server.on('closed', function() {
+    console.log(address + ': closed connection');
+    _.pullAt(connections, connections.indexOf(address));
   });
 
 }, function(error){
